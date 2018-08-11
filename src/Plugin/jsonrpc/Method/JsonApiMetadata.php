@@ -49,6 +49,13 @@ class JsonApiMetadata extends JsonRpcMethodBase {
   protected $configFactory;
 
   /**
+   * The base path for the JSON API.
+   *
+   * @var string
+   */
+  protected $basePath;
+
+  /**
    * JsonApiMetadata constructor.
    */
   public function __construct(
@@ -57,12 +64,14 @@ class JsonApiMetadata extends JsonRpcMethodBase {
     $plugin_definition,
     ResourceTypeRepository $resource_type_repository,
     OpenApiGeneratorManager $open_api_plugin_manager,
-    ConfigFactoryInterface $config_factory
+    ConfigFactoryInterface $config_factory,
+    $base_path
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->resourceTypeRepository = $resource_type_repository;
     $this->openApiManager = $open_api_plugin_manager;
     $this->configFactory = $config_factory;
+    $this->basePath = $base_path;
   }
 
   /**
@@ -79,7 +88,19 @@ class JsonApiMetadata extends JsonRpcMethodBase {
     $resource_type_repository = $container->get('jsonapi.resource_type.repository');
     $open_api_plugin_manager = $container->get('plugin.manager.openapi.generator');
     $config_factory = $container->get('config.factory');
-    return new static($configuration, $plugin_id, $plugin_definition, $resource_type_repository, $open_api_plugin_manager, $config_factory);
+    $param_name = 'jsonapi.base_path';
+    $base_path = $container->hasParameter($param_name)
+      ? $container->getParameter($param_name)
+      : '/jsonapi';
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $resource_type_repository,
+      $open_api_plugin_manager,
+      $config_factory,
+      $base_path
+    );
   }
 
   /**
@@ -94,10 +115,11 @@ class JsonApiMetadata extends JsonRpcMethodBase {
     $generator = $this->openApiManager->createInstance('jsonapi');
     $disabled = static::listDisabledResources($this->resourceTypeRepository);
     $generator->setOptions(['exclude' => $disabled]);
-    $response = new Response('2.0', $this->currentRequest()->id(), [
-      'prefix' => $this->resourceTypeRepository->getPathPrefix(),
+    $output = [
+      'prefix' => $this->basePath,
       'openApi' => $generator->getSpecification(),
-    ]);
+    ];
+    $response = new Response('2.0', $this->currentRequest()->id(), $output);
     // Add some cacheability metatada.
     $jsonapi_config = $this->configFactory->get('jsonapi_extras.settings');
     $response->addCacheableDependency($jsonapi_config);
