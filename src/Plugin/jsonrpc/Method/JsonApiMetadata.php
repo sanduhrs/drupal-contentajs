@@ -2,7 +2,6 @@
 
 namespace Drupal\contentajs\Plugin\jsonrpc\Method;
 
-use Drupal\contenta_enhancements\Controller\OpenApiDocs;
 use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\jsonapi\ResourceType\ResourceType;
