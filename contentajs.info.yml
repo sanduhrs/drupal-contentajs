@@ -1,6 +1,6 @@
 name: Contenta JS
 description: Provides server side configuration options for Contenta JS.
-core: 8.x
+core_version_requirement: ^8 || ^9
 type: module
 dependencies:
   - jsonrpc
